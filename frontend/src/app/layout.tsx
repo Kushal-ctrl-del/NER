@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 
 import BottomNav from "@/components/BottomNav";
 
+import Splash from "@/components/Splash";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} pb-16 bg-gray-50 min-h-screen text-gray-900`}>
+        <Splash />
         {children}
         <BottomNav />
       </body>

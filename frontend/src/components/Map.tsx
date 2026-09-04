@@ -13,7 +13,7 @@ const icon = L.icon({
   iconAnchor: [12, 41],
 });
 
-export default function Map({ segments, districts, vehicles = [], suggestedRoutes = [] }: { segments: any[], districts: any[], vehicles?: any[], suggestedRoutes?: any[] }) {
+export function MapContent({ segments, districts, vehicles = [], suggestedRoutes = [] }: { segments: any[], districts: any[], vehicles?: any[], suggestedRoutes?: any[] }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'clear': return '#4a5d23'; // moss-green
@@ -23,15 +23,29 @@ export default function Map({ segments, districts, vehicles = [], suggestedRoute
     }
   };
 
+  const map = useMap();
+
+  useEffect(() => {
+    if (suggestedRoutes && suggestedRoutes.length > 0) {
+      const allCoords = suggestedRoutes.flatMap((r: any) => 
+        r.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number])
+      );
+      if (allCoords.length > 0) {
+        const bounds = L.latLngBounds(allCoords);
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [suggestedRoutes, map]);
+
   return (
-    <MapContainer center={[25.5, 92.5]} zoom={7} style={{ height: '100%', width: '100%' }}>
+    <>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; OpenStreetMap contributors'
       />
       
       {/* Districts */}
-      {districts.map(d => (
+      {districts?.map(d => (
         <Marker key={d.id} position={[d.lat, d.lng]} icon={icon}>
           <Popup>
             <strong>{d.name}</strong><br/>
@@ -41,13 +55,11 @@ export default function Map({ segments, districts, vehicles = [], suggestedRoute
       ))}
 
       {/* Road Segments */}
-      {segments.map(s => {
+      {segments?.map(s => {
         const color = getStatusColor(s.current_status);
-        // Place the marker at the midpoint of the segment
         const midLat = (s.start_lat + s.end_lat) / 2;
         const midLng = (s.start_lng + s.end_lng) / 2;
         
-        // Custom icon for road segment marker
         const segmentIcon = L.divIcon({
           className: 'custom-segment-icon',
           html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
@@ -76,26 +88,53 @@ export default function Map({ segments, districts, vehicles = [], suggestedRoute
       ))}
 
       {/* Suggested Routes */}
-      {suggestedRoutes.map((r, i) => {
-        // Swap [lng, lat] from OSRM to [lat, lng] for Leaflet
+      {suggestedRoutes?.map((r, i) => {
         const path = r.coordinates.map((c: number[]) => [c[1], c[0]]);
         const color = r.risk_category === 'low' ? '#138808' : r.risk_category === 'elevated' ? '#ffbf00' : '#b7410e';
+        
         return (
-          <Polyline 
-            key={i} 
-            positions={path} 
-            color={color} 
-            weight={6} 
-            opacity={0.8} 
-          >
-            <Popup>
-              <strong>Route {i + 1}</strong><br/>
-              Risk: {r.risk_category}<br/>
-              ETA: {r.eta_minutes} mins
-            </Popup>
-          </Polyline>
+          <div key={i}>
+            <Polyline 
+              positions={path} 
+              color={color} 
+              weight={6} 
+              opacity={0.8} 
+            >
+              <Popup>
+                <strong>Route {i + 1}</strong><br/>
+                Risk: {r.risk_category}<br/>
+                ETA: {r.eta_minutes} mins
+              </Popup>
+            </Polyline>
+            
+            {/* Origin Marker */}
+            {path.length > 0 && (
+              <Marker position={path[0] as [number, number]} icon={L.divIcon({
+                className: 'origin-icon',
+                html: `<div style="background-color: #138808; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">A</div>`,
+                iconSize: [24, 24], iconAnchor: [12, 12]
+              })} />
+            )}
+            
+            {/* Destination Marker */}
+            {path.length > 1 && (
+              <Marker position={path[path.length - 1] as [number, number]} icon={L.divIcon({
+                className: 'dest-icon',
+                html: `<div style="background-color: #b7410e; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">B</div>`,
+                iconSize: [24, 24], iconAnchor: [12, 12]
+              })} />
+            )}
+          </div>
         );
       })}
+    </>
+  );
+}
+
+export default function Map({ segments = [], districts = [], vehicles = [], suggestedRoutes = [] }: { segments?: any[], districts?: any[], vehicles?: any[], suggestedRoutes?: any[] }) {
+  return (
+    <MapContainer center={[25.5, 92.5]} zoom={7} style={{ height: '100%', width: '100%' }}>
+      <MapContent segments={segments} districts={districts} vehicles={vehicles} suggestedRoutes={suggestedRoutes} />
     </MapContainer>
   );
 }
