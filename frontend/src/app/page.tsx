@@ -57,7 +57,8 @@ export default function Dashboard() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Top Header */}
       <header className="bg-white text-gray-800 p-4 shadow-sm z-10 flex justify-between items-center sticky top-0">
-        <div>
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-full" />
           <h1 className="text-2xl font-bold font-sans">
             <span className="text-[#FF9933]">Yatra</span>
             <span className="text-[#2a2a2a]"> </span>
