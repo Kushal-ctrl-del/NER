@@ -58,3 +58,59 @@ def predict_risk(segment_id: UUID):
         "confidence": confidence,
         "contributing_factors": factors
     }
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    from math import radians, cos, sin, asin, sqrt
+    # Haversine formula
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    r = 6371 # Radius of earth in kilometers
+    return c * r
+
+def min_distance_to_route(lat, lng, coords):
+    # coords is a list of [lng, lat]
+    min_dist = float('inf')
+    for c in coords:
+        d = calculate_distance(lat, lng, c[1], c[0])
+        if d < min_dist:
+            min_dist = d
+    return min_dist
+
+@router.get("/bottlenecks")
+def get_bottlenecks():
+    """
+    A segment is a bottleneck if it's at_risk/blocked AND at least one
+    active shipment's route passes near it. This is a computed view,
+    not a stored table — always reflects current data.
+    """
+    segments_res = supabase.table("road_segments").select("*").in_(
+        "current_status", ["at_risk", "blocked"]
+    ).execute()
+    shipments_res = supabase.table("shipments").select("*").eq("status", "in_transit").execute()
+
+    PROXIMITY_THRESHOLD_KM = 5.0 # 5 km
+    bottlenecks = []
+    for seg in segments_res.data:
+        affected_shipments = []
+        for shipment in shipments_res.data:
+            if not shipment.get("route_geojson"):
+                continue
+            coords = shipment["route_geojson"]
+            mid_lat = (seg["start_lat"] + seg["end_lat"]) / 2
+            mid_lng = (seg["start_lng"] + seg["end_lng"]) / 2
+            if min_distance_to_route(mid_lat, mid_lng, coords) <= PROXIMITY_THRESHOLD_KM:
+                affected_shipments.append(shipment["id"])
+        if affected_shipments:
+            bottlenecks.append({
+                "segment_id": seg["id"],
+                "segment_name": seg["name"],
+                "status": seg["current_status"],
+                "risk_score": seg["risk_score"],
+                "affected_shipment_count": len(affected_shipments),
+                "affected_shipment_ids": affected_shipments,
+            })
+
+    return {"bottlenecks": bottlenecks}

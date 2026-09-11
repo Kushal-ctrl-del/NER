@@ -16,24 +16,38 @@ export const dict = {
     notes: "Notes",
     submit: "Submit",
     photoVerif: "Photo Verification",
-    tapToPhoto: "Tap to Take Photo"
+    tapToPhoto: "Tap to Take Photo",
+    home: "Home",
+    sos: "SOS",
+    track: "Track",
+    profile: "Profile",
+    statusClear: "Clear",
+    statusAtRisk: "At Risk",
+    statusBlocked: "Blocked"
   },
   hi: {
     dashboard: "डैशबोर्ड",
     reportIssue: "समस्या दर्ज करें",
     transportLogin: "परिवहन / लॉगिन",
     blocked: "अवरुद्ध",
-    atRisk: "खतरे में",
+    atRisk: "जोखिम में",
     clear: "साफ़",
-    liveFeed: "लाइव फीड",
+    liveFeed: "लाइव फ़ीड",
     latestReports: "नवीनतम रिपोर्ट",
     status: "स्थिति",
     location: "स्थान",
     severity: "गंभीरता",
-    notes: "टिप्पणियाँ",
+    notes: "नोट्स",
     submit: "जमा करें",
     photoVerif: "फोटो सत्यापन",
-    tapToPhoto: "फोटो लेने के लिए टैप करें"
+    tapToPhoto: "फोटो लेने के लिए टैप करें",
+    home: "होम",
+    sos: "एसओएस",
+    track: "ट्रैक",
+    profile: "प्रोफ़ाइल",
+    statusClear: "साफ़",
+    statusAtRisk: "जोखिम में",
+    statusBlocked: "अवरुद्ध"
   }
 };
 

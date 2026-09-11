@@ -3,16 +3,19 @@
 import { Home, AlertTriangle, Truck, User, ShieldAlert } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useLanguage } from "@/lib/useLanguage";
+import { t } from "@/lib/i18n";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { lang } = useLanguage();
 
   const tabs = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Report", href: "/report", icon: AlertTriangle },
-    { name: "SOS", href: "/sos", icon: ShieldAlert },
-    { name: "Track", href: "/transport", icon: Truck },
-    { name: "Profile", href: "/profile", icon: User },
+    { name: t("home", lang), href: "/", icon: Home },
+    { name: t("reportIssue", lang), href: "/report", icon: AlertTriangle },
+    { name: t("sos", lang), href: "/sos", icon: ShieldAlert },
+    { name: t("track", lang), href: "/transport", icon: Truck },
+    { name: t("profile", lang), href: "/profile", icon: User },
   ];
 
   // Don't show bottom nav on login page if we want it isolated, 
@@ -27,7 +30,7 @@ export default function BottomNav() {
         const isActive = pathname === tab.href || (tab.href === "/transport" && pathname.startsWith("/transport"));
         
         return (
-          <Link href={tab.href} key={tab.name} className="flex flex-col items-center justify-center w-full h-full">
+          <Link href={tab.href} key={tab.href} className="flex flex-col items-center justify-center w-full h-full">
             <Icon 
               size={24} 
               className={`mb-1 transition-colors ${isActive ? "text-[#FF9933]" : "text-gray-400"}`} 

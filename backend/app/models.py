@@ -98,7 +98,7 @@ class ShipmentStatusUpdate(BaseModel):
 
 # Alerts
 class AlertCreate(BaseModel):
-    road_segment_id: UUID
+    road_segment_id: Optional[UUID] = None
     alert_type: str
     message: str
     severity: str

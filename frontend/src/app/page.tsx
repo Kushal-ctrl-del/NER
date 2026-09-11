@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import MapWrapper from "@/components/MapWrapper";
 import { supabase } from "@/lib/supabaseClient";
-import { t, Language } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/useLanguage";
 import { AlertCircle, MapPin, Search, AlertTriangle, Navigation } from "lucide-react";
 import Link from "next/link";
 
@@ -12,9 +13,10 @@ export default function Dashboard() {
   const [segments, setSegments] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [bottlenecks, setBottlenecks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [lang, setLang] = useState<Language>("en");
+  const { lang, setLang } = useLanguage();
   
   useEffect(() => {
     const fetchData = async () => {
@@ -23,11 +25,14 @@ export default function Dashboard() {
         const sRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/road-segments`);
         const rRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/field-reports`);
         const vRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vehicles`);
+        const bRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/bottlenecks`);
         
         setDistricts(await dRes.json());
         setSegments(await sRes.json());
         setReports(await rRes.json());
         setVehicles(await vRes.json());
+        const bData = await bRes.json();
+        setBottlenecks(bData.bottlenecks || []);
       } catch (e) {
         console.error("Error fetching data:", e);
       } finally {
@@ -69,7 +74,7 @@ export default function Dashboard() {
           onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
           className="px-2 py-1 text-xs font-bold border border-gray-300 rounded text-gray-600 hover:bg-gray-100 transition"
         >
-          {lang === 'en' ? 'हिंदी' : 'English'}
+          {lang === 'en' ? 'हिन्दी' : 'English'}
         </button>
       </header>
 
@@ -118,6 +123,30 @@ export default function Dashboard() {
             <MapWrapper segments={segments} districts={districts} vehicles={vehicles} />
           </div>
         </div>
+
+        {/* Supply Chain Bottlenecks Card */}
+        {bottlenecks.length > 0 && (
+          <div className="bg-[#ffebf0] rounded-2xl shadow-sm border border-[#ffb3c6] overflow-hidden mb-6">
+            <div className="p-3 border-b border-[#ffb3c6] flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2 text-rust" />
+              <h2 className="font-bold text-rust text-sm">Supply Chain Bottlenecks</h2>
+            </div>
+            <div className="p-3 space-y-2">
+              {bottlenecks.map(b => (
+                <div key={b.segment_id} className="bg-white p-3 rounded-xl border border-[#ffb3c6] text-sm flex justify-between items-center">
+                  <div>
+                    <p className="font-bold text-gray-800">{b.segment_name}</p>
+                    <p className="text-[10px] font-bold text-rust uppercase">Status: {b.status.replace('_', ' ')}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xl font-bold text-rust">{b.affected_shipment_count}</span>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase">Shipments blocked</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Live Feed Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">

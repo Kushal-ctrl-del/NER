@@ -13,6 +13,34 @@ const icon = L.icon({
   iconAnchor: [12, 41],
 });
 
+function SegmentPopupContent({ segment }: { segment: any }) {
+  const [congestion, setCongestion] = useState<{ congestion_proxy?: number, basis?: string } | null>(null);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/road-segments/${segment.id}/congestion-proxy`)
+      .then(res => res.json())
+      .then(data => setCongestion(data))
+      .catch(console.error);
+  }, [segment.id]);
+
+  return (
+    <div className="text-xs">
+      <strong>{segment.name}</strong><br/>
+      Status: {segment.current_status}<br/>
+      Risk Score: {segment.risk_score.toFixed(2)}<br/>
+      {congestion ? (
+        <div className="mt-2 p-1 bg-blue-50 border border-blue-200 rounded">
+          <strong>Activity-based congestion proxy (not live traffic data):</strong><br/>
+          Score: {congestion.congestion_proxy}<br/>
+          <em className="text-[9px] text-gray-500">{congestion.basis}</em>
+        </div>
+      ) : (
+        <div className="mt-2 text-gray-400">Loading congestion proxy...</div>
+      )}
+    </div>
+  );
+}
+
 export function MapContent({ segments, districts, vehicles = [], suggestedRoutes = [] }: { segments: any[], districts: any[], vehicles?: any[], suggestedRoutes?: any[] }) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -70,9 +98,7 @@ export function MapContent({ segments, districts, vehicles = [], suggestedRoutes
         return (
           <Marker key={s.id} position={[midLat, midLng]} icon={segmentIcon}>
             <Popup>
-              <strong>{s.name}</strong><br/>
-              Status: {s.current_status}<br/>
-              Risk Score: {s.risk_score.toFixed(2)}
+              <SegmentPopupContent segment={s} />
             </Popup>
           </Marker>
         )

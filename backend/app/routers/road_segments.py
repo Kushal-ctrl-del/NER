@@ -3,9 +3,17 @@ from app.db import supabase
 from app.models import RoadSegmentResponse
 from app.risk import calculate_risk_score
 from uuid import UUID
+from datetime import datetime, timezone
+from app.congestion import estimate_congestion_risk
 
 router = APIRouter(prefix="/road-segments", tags=["Road Segments"])
 risk_router = APIRouter(prefix="/risk", tags=["Risk"])
+
+@router.get("/{id}/congestion-proxy")
+def get_congestion_proxy(id: UUID):
+    # Fetch recent field reports for this segment
+    res = supabase.table("field_reports").select("created_at").eq("road_segment_id", str(id)).execute()
+    return estimate_congestion_risk(res.data)
 
 @router.get("", response_model=list[RoadSegmentResponse])
 def list_road_segments():

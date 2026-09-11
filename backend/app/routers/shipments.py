@@ -27,6 +27,44 @@ def suggest_route(origin_lat: float, origin_lng: float, dest_lat: float, dest_ln
         ]
     }
 
+def check_and_flag_delayed_shipments():
+    """
+    Flags any 'in_transit' shipment whose eta_minutes has been
+    exceeded by more than a grace window as 'delayed', and creates a
+    delayed_delivery alert.
+    """
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    GRACE_MINUTES = 15
+
+    active = supabase.table("shipments").select("*").eq("status", "in_transit").execute()
+    for shipment in active.data:
+        if not shipment.get("eta_minutes"):
+            continue
+        try:
+            created = datetime.fromisoformat(shipment["created_at"].replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        elapsed_minutes = (now - created).total_seconds() / 60
+        if elapsed_minutes > shipment["eta_minutes"] + GRACE_MINUTES:
+            supabase.table("shipments").update({"status": "delayed"}).eq("id", shipment["id"]).execute()
+            existing_alert = (
+                supabase.table("alerts")
+                .select("id, message")
+                .eq("alert_type", "delayed_delivery")
+                .eq("is_active", True)
+                .execute()
+            )
+            already_alerted = any(shipment["id"] in (a.get("message") or "") for a in existing_alert.data)
+            if not already_alerted:
+                supabase.table("alerts").insert({
+                    "road_segment_id": None,
+                    "alert_type": "delayed_delivery",
+                    "message": f"Shipment {shipment['id']} is delayed — exceeded ETA by {int(elapsed_minutes - shipment['eta_minutes'])} min.",
+                    "severity": "medium",
+                    "is_active": True,
+                }).execute()
+
 @router.post("", response_model=ShipmentResponse)
 def create_shipment(shipment: ShipmentCreate):
     data = shipment.model_dump(exclude_unset=True)
@@ -44,6 +82,7 @@ def create_shipment(shipment: ShipmentCreate):
 
 @router.get("", response_model=list[ShipmentResponse])
 def list_shipments():
+    check_and_flag_delayed_shipments()
     res = supabase.table("shipments").select("*").execute()
     return res.data
 
