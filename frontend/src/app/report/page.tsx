@@ -73,12 +73,54 @@ export default function ReportPage() {
   };
 
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
       setPhotoFile(file);
+      
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
+        const img = new window.Image();
+        img.onload = () => {
+          // Resize and watermark
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1080;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Draw Geotag Watermark
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(10, height - 70, 450, 60);
+            
+            ctx.fillStyle = '#FF9933'; // India Saffron
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText('YATRA SATHI - VERIFIED GEOTAG', 20, height - 45);
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '16px Arial';
+            ctx.fillText(`Lat: ${lat.toFixed(6)} Lng: ${lng.toFixed(6)}`, 20, height - 20);
+            
+            ctx.fillStyle = '#138808'; // India Green
+            const dateStr = new Date().toLocaleString();
+            ctx.fillText(`Time: ${dateStr}`, 250, height - 20);
+            
+            const watermarkedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+            setPhotoPreview(watermarkedBase64);
+          } else {
+            setPhotoPreview(reader.result as string);
+          }
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -217,12 +259,9 @@ export default function ReportPage() {
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <label className="block text-sm font-bold mb-3 text-gray-800">Photo Verification</label>
           {photoPreview ? (
-            <div className="relative mb-2">
-              <img src={photoPreview} alt="Preview" className="w-full h-48 object-cover rounded-xl" />
-              <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm">
-                Lat: {lat.toFixed(4)} Lng: {lng.toFixed(4)}
-              </div>
-              <button type="button" onClick={() => {setPhotoPreview(null); setPhotoFile(null)}} className="absolute top-2 right-2 bg-white text-rust text-[10px] uppercase tracking-wider px-3 py-1 rounded-full font-bold shadow-md">Remove</button>
+            <div className="relative mb-2 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <img src={photoPreview} alt="Preview" className="w-full h-auto object-cover max-h-64" />
+              <button type="button" onClick={() => {setPhotoPreview(null); setPhotoFile(null)}} className="absolute top-2 right-2 bg-white text-rust text-[10px] uppercase tracking-wider px-3 py-1 rounded-full font-bold shadow-md hover:bg-gray-50">Remove</button>
             </div>
           ) : (
             <label className="border-2 border-dashed border-gray-200 bg-gray-50 p-8 rounded-xl flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-100 transition">
