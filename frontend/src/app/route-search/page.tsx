@@ -77,21 +77,38 @@ export default function RouteSearchPage() {
         </div>
 
         {routes.length > 0 && (
-          <div className="bg-white p-4 border-t border-gray-200 absolute bottom-16 left-0 right-0 max-h-48 overflow-y-auto z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] rounded-t-2xl">
+          <div className="bg-white p-4 border-t border-gray-200 absolute bottom-16 left-0 right-0 max-h-64 overflow-y-auto z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] rounded-t-2xl">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Suggested Routes</h3>
-            <div className="space-y-2">
+            <div className="space-y-4">
               {routes.map((r, i) => (
-                <div key={i} className="flex items-center justify-between p-3 border border-gray-100 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${r.risk_category === 'low' ? 'bg-moss-green' : r.risk_category === 'elevated' ? 'bg-amber' : 'bg-rust'}`} />
-                    <div>
-                      <p className="text-sm font-bold text-gray-800">Route {i + 1}</p>
-                      <p className="text-[10px] font-bold text-gray-500 uppercase">Risk: {r.risk_category}</p>
+                <div key={i} className="flex flex-col p-3 border border-gray-100 bg-gray-50 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${r.risk_category === 'low' ? 'bg-moss-green' : r.risk_category === 'elevated' ? 'bg-amber' : 'bg-rust'}`} />
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">Route {i + 1}</p>
+                        <p className="text-[10px] font-bold text-gray-500 uppercase">Risk: {r.risk_category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-gray-800">{r.eta_minutes} mins</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-gray-800">{r.eta_minutes} mins</p>
-                  </div>
+                  
+                  {/* Turn-by-Turn Directions */}
+                  {r.steps && r.steps.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-gray-200 max-h-32 overflow-y-auto">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Turn-by-turn Directions:</p>
+                      <ul className="space-y-1">
+                        {r.steps.map((step: string, idx: number) => (
+                          <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
+                            <span className="text-[#FF9933] font-bold">•</span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

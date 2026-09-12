@@ -11,7 +11,7 @@ routes_router = APIRouter(prefix="/routes", tags=["Routes"])
 @routes_router.get("/suggest")
 def suggest_route(origin_lat: float, origin_lng: float, dest_lat: float, dest_lng: float):
     # Call OSRM
-    coords, eta = get_osrm_route(origin_lng, origin_lat, dest_lng, dest_lat)
+    coords, eta, steps = get_osrm_route(origin_lng, origin_lat, dest_lng, dest_lat)
     if not coords:
         raise HTTPException(status_code=500, detail="Could not calculate route")
         
@@ -22,7 +22,8 @@ def suggest_route(origin_lat: float, origin_lng: float, dest_lat: float, dest_ln
             {
                 "risk_category": "unknown", # default
                 "eta_minutes": eta,
-                "coordinates": coords
+                "coordinates": coords,
+                "steps": steps or []
             }
         ]
     }

@@ -9,7 +9,8 @@ def get_osrm_route(origin_lng: float, origin_lat: float, dest_lng: float, dest_l
     headers = {"User-Agent": "NERLogisticsPlatform-SIH2026/1.0"}
     params = {
         "overview": "full",
-        "geometries": "geojson"
+        "geometries": "geojson",
+        "steps": "true"
     }
     
     resp = requests.get(url, headers=headers, params=params)
@@ -20,6 +21,21 @@ def get_osrm_route(origin_lng: float, origin_lat: float, dest_lng: float, dest_l
             # duration in seconds -> ETA minutes
             eta_minutes = int(route.get("duration", 0) / 60)
             coords = route["geometry"]["coordinates"] # [lng, lat]
-            return coords, eta_minutes
             
-    return None, None
+            # Extract turn-by-turn text instructions
+            steps = []
+            if route.get("legs"):
+                for leg in route["legs"]:
+                    if leg.get("steps"):
+                        for step in leg["steps"]:
+                            if step.get("maneuver") and step["maneuver"].get("instruction"):
+                                steps.append(step["maneuver"]["instruction"])
+                            elif step.get("name"):
+                                maneuver_type = step.get("maneuver", {}).get("type", "proceed")
+                                steps.append(f"{maneuver_type.capitalize()} on {step['name']}")
+                            else:
+                                steps.append("Continue along route")
+                                
+            return coords, eta_minutes, steps
+            
+    return None, None, None
