@@ -16,27 +16,30 @@ if os.path.exists(MODEL_PATH):
     with open(MODEL_PATH, "rb") as f:
         clf = pickle.load(f)
 
+from app.ml_data import build_features_for_segment
+
 @router.post("/predict-risk/{segment_id}", response_model=MLRiskPredictionResponse)
 def predict_risk(segment_id: UUID):
     res = supabase.table("road_segments").select("*").eq("id", str(segment_id)).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Segment not found")
         
-    segment = res.data[0]
+    try:
+        features = build_features_for_segment(str(segment_id))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     
-    reports_res = supabase.table("field_reports").select("id").eq("road_segment_id", str(segment_id)).execute()
-    report_count = len(reports_res.data)
-    
-    # Simulated rainfall data
-    r_24h = 45.0
-    r_72h = 118.0
-    days_since = 5.0
+    r_24h = features["rainfall_mm_last_24h"]
+    r_72h = features["rainfall_mm_last_72h"]
+    days_since = features["days_since_last_report"]
+    report_count = features["prior_report_count"]
     
     factors = [
         f"rainfall_last_24h: {r_24h}mm",
         f"rainfall_last_72h: {r_72h}mm",
         f"days_since_last_report: {days_since}",
-        f"{report_count} prior reports"
+        f"{report_count} prior reports",
+        f"Rainfall data source: {features['_source']}"
     ]
     
     if clf:
