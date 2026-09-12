@@ -259,8 +259,8 @@ export default function ReportPage() {
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <label className="block text-sm font-bold mb-3 text-gray-800">Photo Verification</label>
           {photoPreview ? (
-            <div className="relative mb-2 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-              <img src={photoPreview} alt="Preview" className="w-full h-auto object-cover max-h-64" />
+            <div className="relative mb-2 border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-black">
+              <img src={photoPreview} alt="Preview" className="w-full h-auto max-h-96 object-contain" />
               <button type="button" onClick={() => {setPhotoPreview(null); setPhotoFile(null)}} className="absolute top-2 right-2 bg-white text-rust text-[10px] uppercase tracking-wider px-3 py-1 rounded-full font-bold shadow-md hover:bg-gray-50">Remove</button>
             </div>
           ) : (
