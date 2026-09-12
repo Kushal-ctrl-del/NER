@@ -84,13 +84,13 @@ export default function RouteSearchPage() {
                 <div key={i} className="flex flex-col p-3 border border-gray-100 bg-gray-50 rounded-xl">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${r.risk_category === 'low' ? 'bg-moss-green' : r.risk_category === 'elevated' ? 'bg-amber' : 'bg-rust'}`} />
+                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${r.risk_category === 'low' ? 'bg-moss-green' : r.risk_category === 'elevated' ? 'bg-amber' : 'bg-rust'}`} />
                       <div>
-                        <p className="text-sm font-bold text-gray-800">Route {i + 1}</p>
+                        <p className="text-sm font-bold text-gray-800 line-clamp-1">{i === 0 ? "Fastest: " : "Alt: "} Via {r.summary}</p>
                         <p className="text-[10px] font-bold text-gray-500 uppercase">Risk: {r.risk_category}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <p className="text-sm font-bold text-gray-800">{r.eta_minutes} mins</p>
                     </div>
                   </div>
@@ -101,8 +101,8 @@ export default function RouteSearchPage() {
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Turn-by-turn Directions:</p>
                       <ul className="space-y-1">
                         {r.steps.map((step: string, idx: number) => (
-                          <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
-                            <span className="text-[#FF9933] font-bold">•</span>
+                          <li key={idx} className="text-[11px] leading-tight text-gray-600 flex items-start gap-2">
+                            <span className="text-[#FF9933] font-bold mt-0.5">•</span>
                             <span>{step}</span>
                           </li>
                         ))}

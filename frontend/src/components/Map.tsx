@@ -116,18 +116,24 @@ export function MapContent({ segments, districts, vehicles = [], suggestedRoutes
       {/* Suggested Routes */}
       {suggestedRoutes?.map((r, i) => {
         const path = r.coordinates.map((c: number[]) => [c[1], c[0]]);
-        const color = r.risk_category === 'low' ? '#138808' : r.risk_category === 'elevated' ? '#ffbf00' : '#b7410e';
+        let color = '#3b82f6'; // default blue for unknown
+        if (r.risk_category === 'low') color = '#138808';
+        else if (r.risk_category === 'elevated') color = '#ffbf00';
+        else if (r.risk_category === 'blocked' || r.risk_category === 'high') color = '#b7410e';
+        
+        const isAlt = i > 0;
         
         return (
           <div key={i}>
             <Polyline 
               positions={path} 
-              color={color} 
-              weight={6} 
-              opacity={0.8} 
+              color={isAlt ? '#9ca3af' : color} 
+              weight={isAlt ? 4 : 6} 
+              opacity={isAlt ? 0.6 : 0.8} 
+              dashArray={isAlt ? "10, 10" : undefined}
             >
               <Popup>
-                <strong>Route {i + 1}</strong><br/>
+                <strong>{i === 0 ? "Fastest: " : "Alt: "} Via {r.summary || `Route ${i+1}`}</strong><br/>
                 Risk: {r.risk_category}<br/>
                 ETA: {r.eta_minutes} mins
               </Popup>

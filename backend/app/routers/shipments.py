@@ -11,21 +11,23 @@ routes_router = APIRouter(prefix="/routes", tags=["Routes"])
 @routes_router.get("/suggest")
 def suggest_route(origin_lat: float, origin_lng: float, dest_lat: float, dest_lng: float):
     # Call OSRM
-    coords, eta, steps = get_osrm_route(origin_lng, origin_lat, dest_lng, dest_lat)
-    if not coords:
+    routes_data = get_osrm_route(origin_lng, origin_lat, dest_lng, dest_lat)
+    if not routes_data:
         raise HTTPException(status_code=500, detail="Could not calculate route")
         
-    # In a real app we would intersect coords with road_segments and compute risk.
-    # For now, just return the route as 'ranked 1'
+    # In a real app we would intersect coords with road_segments and compute risk for each
+    response_routes = []
+    for idx, rd in enumerate(routes_data):
+        response_routes.append({
+            "risk_category": "unknown", # default
+            "eta_minutes": rd["eta_minutes"],
+            "coordinates": rd["coords"],
+            "steps": rd["steps"],
+            "summary": rd["summary"]
+        })
+        
     return {
-        "routes": [
-            {
-                "risk_category": "unknown", # default
-                "eta_minutes": eta,
-                "coordinates": coords,
-                "steps": steps or []
-            }
-        ]
+        "routes": response_routes
     }
 
 def check_and_flag_delayed_shipments():
